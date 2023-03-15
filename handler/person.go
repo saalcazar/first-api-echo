@@ -107,7 +107,6 @@ func (p *person) delete(w http.ResponseWriter, r *http.Request) {
 	}
 	response := newResponse(Message, "OK", nil)
 	responseJSON(w, http.StatusOK, response)
-	return
 }
 
 func (p *person) getAll(w http.ResponseWriter, r *http.Request) {
