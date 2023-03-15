@@ -1,15 +1,15 @@
 package model
 
 type Comunity struct {
-	Name string
+	Name string `json:"name"`
 }
 
 type Communities []Comunity
 
 type Person struct {
-	Name        string
-	Age         uint8
-	Communities Communities
+	Name        string      `json:"name"`
+	Age         uint8       `json:"age"`
+	Communities Communities `json:"communities"`
 }
 
 type Persons []Person
