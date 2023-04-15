@@ -1,14 +1,14 @@
 ## Archivos a migrar
 
 ## Handler
-- login.login()
+- [X]login.login()
 - person:
   - create()
   - update()
   - delete()
   - getbyid()
   - getall()
-- response.responseJSON() (borra)
+- [X] response.responseJSON() (borra)
 - route.
   - RoutePerson()
   - RouteLogin()
@@ -19,4 +19,4 @@
 - forbiden()
 
 ## CMD
-- Registrar con Echo
+- [X] Registrar con Echo

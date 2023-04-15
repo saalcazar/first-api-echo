@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo"
 	"github.com/saalcazar/first-api-echo/model"
 )
 
@@ -20,114 +20,102 @@ func newPerson(storage Storage) person {
 }
 
 // CREATE
-func (p *person) create(w http.ResponseWriter, r *http.Request) {
-	//Aseguramos que el verbo seas POST
-	if r.Method != http.MethodPost {
-		//Devolvemos un JSON con el mensaje de error
-		response := newResponse(Error, "Método no permitido", nil)
-		responseJSON(w, http.StatusBadRequest, response)
-		return
-	}
-
-	//Creamos la persona
-	//Recibimos el body de la petición
+func (p *person) create(c echo.Context) error {
 	data := model.Person{}
-	err := json.NewDecoder(r.Body).Decode(&data)
+	err := c.Bind(&data)
 	if err != nil {
 		response := newResponse(Error, "La persona no tiene una estructura correcta", nil)
-		responseJSON(w, http.StatusBadRequest, response)
-		return
+		return c.JSON(http.StatusBadRequest, response)
 	}
 
 	err = p.storage.Create(&data)
 	if err != nil {
 		response := newResponse(Error, "Hubo un problema al crear la persona", nil)
-		responseJSON(w, http.StatusInternalServerError, response)
-		return
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := newResponse(Message, "Si se pudo crear la persona", nil)
-	responseJSON(w, http.StatusCreated, response)
+	return c.JSON(http.StatusCreated, response)
 
 }
 
 // Update
-func (p *person) update(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		response := newResponse(Error, "Método no permitido", nil)
-		responseJSON(w, http.StatusBadRequest, response)
-		return
-	}
+func (p *person) update(c echo.Context) error {
 
 	//Query param
-	ID, err := strconv.Atoi(r.URL.Query().Get("id"))
+	ID, err := strconv.Atoi(c.Param("id"))
 	if err != nil && ID < 0 {
 		response := newResponse(Error, "El ID debe ser un número entero positivo", nil)
-		responseJSON(w, http.StatusBadRequest, response)
+		c.JSON(http.StatusBadRequest, response)
 	}
 
 	data := model.Person{}
-	err = json.NewDecoder(r.Body).Decode(&data)
+	err = c.Bind(&data)
 	if err != nil {
 		response := newResponse(Error, "La persona no tiene una estructura correcta", nil)
-		responseJSON(w, http.StatusBadRequest, response)
-		return
+		return c.JSON(http.StatusBadRequest, response)
 	}
 
 	err = p.storage.Update(ID, &data)
 	if err != nil {
 		response := newResponse(Error, "Hubo un problema al crear a la persona", nil)
-		responseJSON(w, http.StatusInternalServerError, response)
-		return
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := newResponse(Message, "Si se pudo actualizar a la persona", nil)
-	responseJSON(w, http.StatusOK, response)
+	return c.JSON(http.StatusOK, response)
 }
 
 // Delete
-func (p *person) delete(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		response := newResponse(Error, "Método no permitido", nil)
-		responseJSON(w, http.StatusBadRequest, response)
-		return
-	}
-	ID, err := strconv.Atoi(r.URL.Query().Get("id"))
+func (p *person) delete(c echo.Context) error {
+	ID, err := strconv.Atoi(c.Param("id"))
 	if err != nil && ID < 0 {
 		response := newResponse(Error, "El ID debe ser un número entero positivo", nil)
-		responseJSON(w, http.StatusBadRequest, response)
+		return c.JSON(http.StatusBadRequest, response)
 	}
 	err = p.storage.Delete(ID)
 	if errors.Is(err, model.ErrIDPersonDoesNotExists) {
 		response := newResponse(Error, "El ID de la persona no existe", nil)
-		responseJSON(w, http.StatusBadRequest, response)
-		return
+		return c.JSON(http.StatusBadRequest, response)
 	}
 	if err != nil {
 		response := newResponse(Error, "Hubo un problema al eliminar a la persona", nil)
-		responseJSON(w, http.StatusInternalServerError, response)
-		return
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 	response := newResponse(Message, "OK", nil)
-	responseJSON(w, http.StatusOK, response)
+	return c.JSON(http.StatusOK, response)
 }
 
-func (p *person) getAll(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		//Devolvemos un JSON con el mensaje de error
-		response := newResponse(Error, "Método no permitido", nil)
-		responseJSON(w, http.StatusBadRequest, response)
-		return
+// GET BY ID
+func (p *person) getByID(c echo.Context) error {
+	ID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response := newResponse(Error, "El ID debe ser un número entero positivo", nil)
+		return c.JSON(http.StatusBadRequest, response)
 	}
+	data, err := p.storage.GetByID(ID)
+	if errors.Is(err, model.ErrIDPersonDoesNotExists) {
+		response := newResponse(Error, "El ID de la persona no existe", nil)
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	if err != nil {
+		response := newResponse(Error, "Hubo un problema al cargar a la persona", nil)
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+	response := newResponse(Message, "OK", data)
+	return c.JSON(http.StatusOK, response)
 
+}
+
+// GET ALL
+func (p *person) getAll(c echo.Context) error {
 	data, err := p.storage.GetAll()
 	if err != nil {
 		response := newResponse(Error, "Hubo un rpoblema al obtener a todas las personas", nil)
-		responseJSON(w, http.StatusInternalServerError, response)
-		return
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := newResponse(Message, "OK", data)
-	responseJSON(w, http.StatusOK, response)
+	return c.JSON(http.StatusOK, response)
 
 }

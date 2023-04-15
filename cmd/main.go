@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
-	"net/http"
+
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 
 	"github.com/saalcazar/first-api-echo/authorization"
 	"github.com/saalcazar/first-api-echo/handler"
@@ -15,14 +17,14 @@ func main() {
 		log.Fatalf("no se pudo cargar los certificados: %v", err)
 	}
 	store := storage.NewMemory()
-	mux := http.NewServeMux()
 
-	//Grupo de rutas de person
+	e := echo.New()
+	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
+	handler.RouteLogin(e, &store)
+	handler.RoutePerson(e, &store)
 
-	handler.RoutePerson(mux, &store)
-	handler.RouteLogin(mux, &store)
-
-	err = http.ListenAndServe(":8080", mux)
+	err = e.Start(":8080")
 	if err != nil {
 		log.Printf("Error en el servidor: %v \n", err)
 	}

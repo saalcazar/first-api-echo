@@ -1,25 +1,24 @@
 package handler
 
 import (
-	"log"
-	"net/http"
-
+	"github.com/labstack/echo"
 	"github.com/saalcazar/first-api-echo/middleware"
 )
 
 // Manejador de la ruta
-func RoutePerson(mux *http.ServeMux, storage Storage) {
+func RoutePerson(e *echo.Echo, storage Storage) {
 	h := newPerson(storage)
-	log.Println("Servidor iniciado en el puerto 8080")
-	mux.HandleFunc("/v1/persons/create", middleware.Log(middleware.Authentication(h.create)))
-	mux.HandleFunc("/v1/persons/update", middleware.Log(h.update))
-	mux.HandleFunc("/v1/persons/delete", middleware.Log(h.delete))
-	mux.HandleFunc("/v1/persons/getall", middleware.Log(h.getAll))
-
+	person := e.Group("/v1/persons")
+	person.Use(middleware.Authentication)
+	person.POST("", h.create)
+	person.PUT("/:id", h.update)
+	person.GET("", h.getAll)
+	person.GET("/:id", h.getByID)
+	person.DELETE("/:id", h.delete)
 }
 
 // RouteLogin
-func RouteLogin(mux *http.ServeMux, storage Storage) {
+func RouteLogin(e *echo.Echo, storage Storage) {
 	h := newLogin(storage)
-	mux.HandleFunc("/v1/login", h.login)
+	e.POST("/v1/login", h.login)
 }

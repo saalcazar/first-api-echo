@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
+	"github.com/labstack/echo"
 	"github.com/saalcazar/first-api-echo/authorization"
 	"github.com/saalcazar/first-api-echo/model"
 )
@@ -16,37 +16,28 @@ func newLogin(s Storage) login {
 	return login{s}
 }
 
-func (l *login) login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		resp := newResponse(Error, "Método no permitido", nil)
-		responseJSON(w, http.StatusBadRequest, resp)
-		return
-	}
+func (l *login) login(c echo.Context) error {
 	data := model.Login{}
-	err := json.NewDecoder(r.Body).Decode(&data)
+	err := c.Bind(&data)
 	if err != nil {
 		resp := newResponse(Error, "Estructura no valida", nil)
-		responseJSON(w, http.StatusBadRequest, resp)
-		return
+		return c.JSON(http.StatusBadRequest, resp)
 	}
 
 	if !isLoginValid(&data) {
 		resp := newResponse(Error, "usuario o contraseña no validos", nil)
-		responseJSON(w, http.StatusBadRequest, resp)
-		return
+		return c.JSON(http.StatusBadRequest, resp)
 	}
 
 	token, err := authorization.GenerateToken(&data)
 	if err != nil {
 		resp := newResponse(Error, "no se pudo generar el token", nil)
-		responseJSON(w, http.StatusInternalServerError, resp)
-		return
+		return c.JSON(http.StatusInternalServerError, resp)
 	}
 
 	dataToken := map[string]string{"token": token}
 	resp := newResponse(Message, "Ok", dataToken)
-	responseJSON(w, http.StatusOK, resp)
-	return
+	return c.JSON(http.StatusOK, resp)
 
 }
 
