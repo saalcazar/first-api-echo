@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/saalcazar/first-api/model"
+	"github.com/saalcazar/first-api-echo/model"
 )
 
 // No exportados por que se van a llamar desde la ruta y nadie debe conocerlos
@@ -19,6 +19,7 @@ func newPerson(storage Storage) person {
 	return person{storage}
 }
 
+// CREATE
 func (p *person) create(w http.ResponseWriter, r *http.Request) {
 	//Aseguramos que el verbo seas POST
 	if r.Method != http.MethodPost {
@@ -50,6 +51,7 @@ func (p *person) create(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Update
 func (p *person) update(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		response := newResponse(Error, "Método no permitido", nil)
@@ -83,6 +85,7 @@ func (p *person) update(w http.ResponseWriter, r *http.Request) {
 	responseJSON(w, http.StatusOK, response)
 }
 
+// Delete
 func (p *person) delete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		response := newResponse(Error, "Método no permitido", nil)
